@@ -203,21 +203,34 @@ textarea{
 <h1>Roberta Vicari Treinadora</h1>
 </header>
 
-<div style="padding:20px;text-align:center;">
+<div style="
+    padding:20px;
+    text-align:center;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+">
 
     <input
-    type="text"
-    id="searchExercise"
-    placeholder="🔍 Buscar exercício por nome ou descrição..."
-    onkeyup="searchExercises()"
-    style="
-        width:80%;
-        max-width:600px;
-        padding:12px 20px;
-        border:1px solid #ccc;
-        border-radius:30px;
-    "
->
+        type="text"
+        id="searchExercise"
+        placeholder="🔍 Buscar exercício..."
+        style="
+            width:60%;
+            max-width:600px;
+            padding:12px 20px;
+            border:1px solid #ccc;
+            border-radius:30px;
+        "
+    >
+
+    <button
+        class="backup-btn"
+        onclick="searchExercises()"
+    >
+        Buscar
+    </button>
 
 </div>
 
@@ -247,6 +260,28 @@ textarea{
 </div>
 
 <div class="container">
+
+    <div
+    class="card"
+    style="margin-bottom:20px;"
+>
+
+    <h3>Nova Categoria</h3>
+
+    <input
+        type="text"
+        id="newCategory"
+        placeholder="Ex: Ombros"
+    >
+
+    <button
+        class="add"
+        onclick="addCategory()"
+    >
+        Adicionar Categoria
+    </button>
+
+</div>
 
 <div class="tabs">
 
@@ -420,7 +455,23 @@ Excluir
 
 </div>
 
+
 <script>
+
+    function formatarTexto(texto){
+
+    return texto
+        .trim()
+        .toLowerCase()
+        .split(" ")
+        .filter(p => p)
+        .map(p =>
+            p.charAt(0).toUpperCase() +
+            p.slice(1)
+        )
+        .join(" ");
+
+}
 
 let currentExercise = null;
 
@@ -485,14 +536,7 @@ function addExercise(category){
 
     if(!name) return;
 
-    name = name
-        .toLowerCase()
-        .split(" ")
-        .map(palavra =>
-            palavra.charAt(0).toUpperCase() +
-            palavra.slice(1)
-        )
-        .join(" ");
+    name = formatarTexto(name);
 
     const existe = [...document.querySelectorAll(".exercise")]
         .some(ex =>
@@ -698,31 +742,37 @@ async function carregarLocalStorage(){
 
 function searchExercises() {
 
-    const search =
+    const texto =
         document.getElementById("searchExercise")
         .value
-        .toLowerCase();
+        .toLowerCase()
+        .trim();
+
+    const palavras =
+        texto.split(" ")
+        .filter(p => p);
 
     document
-    .querySelectorAll(".exercise")
-    .forEach(exercise => {
+        .querySelectorAll(".exercise")
+        .forEach(exercise => {
 
-        const nome =
-            (exercise.dataset.name || "")
-            .toLowerCase();
+            const conteudo =
+                (
+                    exercise.dataset.name +
+                    " " +
+                    exercise.dataset.description
+                ).toLowerCase();
 
-        const descricao =
-            (exercise.dataset.description || "")
-            .toLowerCase();
+            const encontrou =
+                palavras.every(
+                    palavra =>
+                        conteudo.includes(palavra)
+                );
 
-        const encontrou =
-            nome.includes(search) ||
-            descricao.includes(search);
+            exercise.parentElement.style.display =
+                encontrou ? "" : "none";
 
-        exercise.parentElement.style.display =
-            encontrou ? "" : "none";
-
-    });
+        });
 
 }
 
@@ -849,6 +899,98 @@ async function exportarDados(){
 
 }
 
+
+function addCategory() {
+
+    const input =
+        document.getElementById("newCategory");
+
+    let nome =
+    formatarTexto(
+        input.value
+    );
+
+nome = nome
+    .toLowerCase()
+    .split(" ")
+    .map(palavra =>
+        palavra.charAt(0).toUpperCase() +
+        palavra.slice(1)
+    )
+    .join(" ");
+
+    if(!nome){
+        alert("Digite um nome.");
+        return;
+    }
+
+    const id =
+        nome.toLowerCase()
+        .replace(/\s+/g,"-");
+
+    if(document.getElementById(id)){
+        alert("Categoria já existe.");
+        return;
+    }
+
+    const btn =
+        document.createElement("button");
+
+    btn.className =
+        "tab-btn";
+
+    btn.textContent =
+        nome;
+
+    btn.onclick =
+        (event) =>
+        openTab(event,id);
+
+    document
+        .querySelector(".tabs")
+        .appendChild(btn);
+
+    const content =
+        document.createElement("div");
+
+    content.id =
+        id;
+
+    content.className =
+        "tab-content";
+
+    content.innerHTML = `
+        <div class="card">
+
+            <h2>${nome}</h2>
+
+            <input
+                type="text"
+                id="input-${id}"
+                placeholder="Digite o exercício"
+            >
+
+            <button
+                class="add"
+                onclick="addExercise('${id}')"
+            >
+                Adicionar
+            </button>
+
+            <ul id="list-${id}"></ul>
+
+        </div>
+    `;
+
+    document
+        .querySelector(".container")
+        .appendChild(content);
+
+    input.value = "";
+
+    salvarLocalStorage();
+
+}
 
 </script>
 
