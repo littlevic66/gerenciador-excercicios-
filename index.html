@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciador de Exercícios</title>
+
+<style>
+
+body{
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    background:#ae00f9;
+    margin:0;
+}
+
+header{
+    background:#ae00f9;
+    color:white;
+    text-align:center;
+    padding: 15px;
+}
+
+.container{
+    width:90%;
+    margin:20px auto;
+}
+
+.tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.tab-btn{
+    background:white;
+    padding:12px 22px;
+    border:none;
+    border-radius:30px;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.tab-btn.active{
+    background:#f9f902;
+    color:#000;
+    box-shadow:0 4px 10px rgba(0,0,0,.2);
+}
+
+.tab-content{
+    display:none;
+}
+
+.tab-content.active{
+    display:block;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+
+input{
+    padding:12px 15px;
+    margin-top:10px;
+    width:70%;
+    border:1px solid #ccc;
+    border-radius:25px;
+    outline:none;
+    transition:.3s;
+}
+
+input:focus{
+    border-color:#ae00f9;
+    box-shadow:0 0 8px rgba(174,0,249,.3);
+}
+
+button{
+    cursor:pointer;
+    border:none;
+    border-radius:25px;
+    padding:12px 20px;
+    font-weight:bold;
+    transition:.3s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.add{
+    background:#28a745;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:30px;
+}
+
+ul{
+    margin-top:15px;
+}
+
+li{
+    margin:8px 0;
+}
+
+.exercise{
+    color:#1e88e5;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.exercise:hover{
+    text-decoration:underline;
+}
+
+/*BOTOES IMPORT/EXPORT */
+
+.backup-btn{
+    background:#ffffff;
+    color:#ae00f9;
+    border:2px solid #ae00f9;
+    border-radius:30px;
+    padding:12px 20px;
+    font-weight:bold;
+}
+
+.backup-btn:hover{
+    background:#ae00f9;
+    color:white;
+}
+
+/* MODAL */
+
+.modal{
+    display:none;
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.6);
+    z-index:999;
+}
+
+.modal-content{
+    background:white;
+    width:90%;
+    max-width:600px;
+    margin:50px auto;
+    padding:20px;
+    border-radius:10px;
+}
+
+.close{
+    float:right;
+    font-size:30px;
+    cursor:pointer;
+}
+
+textarea{
+    width:100%;
+    height:120px;
+    padding:10px;
+    margin-top:5px;
+}
+
+.modal input{
+    width:100%;
+    box-sizing:border-box;
+}
+
+.btn{
+    margin-top:10px;
+    padding:10px 15px;
+    border:none;
+    border-radius:5px;
+}
+
+.save{
+    background:#28a745;
+    color:white;
+}
+
+.video{
+    background:#1e88e5;
+    color:white;
+}
+
+.delete{
+    background:#dc3545;
+    color:white;
+}
+
+</style>
+
+</head>
+<body>
+
+<header>
+<h1>Roberta Vicari Treinadora</h1>
+</header>
+
+<div style="padding:20px;text-align:center;">
+
+    <input
+    type="text"
+    id="searchExercise"
+    placeholder="🔍 Buscar exercício por nome ou descrição..."
+    onkeyup="searchExercises()"
+    style="
+        width:80%;
+        max-width:600px;
+        padding:12px 20px;
+        border:1px solid #ccc;
+        border-radius:30px;
+    "
+>
+
+</div>
+
+<div style="text-align:center;margin-bottom:20px;">
+
+    <button
+        class="backup-btn"
+        onclick="exportarDados()">
+        📥 Exportar Backup
+    </button>
+
+    <input
+        type="file"
+        id="importFile"
+        accept=".json"
+        onchange="importarDados(this)"
+        style="display:none;"
+    >
+
+    <button
+        class="backup-btn"
+        onclick="document.getElementById('importFile').click()">
+        📤 Importar Backup
+    </button>
+
+</div>
+</div>
+
+<div class="container">
+
+<div class="tabs">
+
+<button class="tab-btn active" onclick="openTab(event,'peito')">
+Decubito
+</button>
+
+<button class="tab-btn" onclick="openTab(event,'costas')">
+Costas
+</button>
+
+<button class="tab-btn" onclick="openTab(event,'pernas')">
+Pernas
+</button>
+
+<button class="tab-btn" onclick="openTab(event,'cardio')">
+Cardio
+</button>
+
+</div>
+
+<!-- PEITO -->
+
+<div id="peito" class="tab-content active">
+
+<div class="card">
+
+<h2>Peito</h2>
+
+<input
+type="text"
+id="input-peito"
+placeholder="Digite o exercício">
+
+<button
+class="add"
+onclick="addExercise('peito')">
+Adicionar
+</button>
+
+<ul id="list-peito"></ul>
+
+</div>
+
+</div>
+
+<!-- COSTAS -->
+
+<div id="costas" class="tab-content">
+
+<div class="card">
+
+<h2>Costas</h2>
+
+<input
+type="text"
+id="input-costas"
+placeholder="Digite o exercício">
+
+<button
+class="add"
+onclick="addExercise('costas')">
+Adicionar
+</button>
+
+<ul id="list-costas"></ul>
+
+</div>
+
+</div>
+
+<!-- PERNAS -->
+
+<div id="pernas" class="tab-content">
+
+<div class="card">
+
+<h2>Pernas</h2>
+
+<input
+type="text"
+id="input-pernas"
+placeholder="Digite o exercício">
+
+<button
+class="add"
+onclick="addExercise('pernas')">
+Adicionar
+</button>
+
+<ul id="list-pernas"></ul>
+
+</div>
+
+</div>
+
+<!-- CARDIO -->
+
+<div id="cardio" class="tab-content">
+
+<div class="card">
+
+<h2>Cardio</h2>
+
+<input
+type="text"
+id="input-cardio"
+placeholder="Digite o exercício">
+
+<button
+class="add"
+onclick="addExercise('cardio')">
+Adicionar
+</button>
+
+<ul id="list-cardio"></ul>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- MODAL -->
+
+<div id="exerciseModal" class="modal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeModal()">
+&times;
+</span>
+
+<h2 id="exerciseName"></h2>
+
+<label>Descrição:</label>
+
+<textarea id="exerciseDescription"></textarea>
+
+<br><br>
+
+<label>Link do vídeo:</label>
+
+<input
+type="text"
+id="exerciseVideo"
+placeholder="https://youtube.com/..."
+>
+
+<br>
+
+<button
+class="btn save"
+onclick="saveExercise()">
+Salvar
+</button>
+
+<button
+class="btn video"
+onclick="watchVideo()">
+Ver Vídeo
+</button>
+
+<button
+class="btn delete"
+onclick="deleteExercise()">
+Excluir
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+let currentExercise = null;
+
+/* ABAS */
+
+function openTab(event, tabId){
+
+document.querySelectorAll(".tab-content")
+.forEach(tab => tab.classList.remove("active"));
+
+document.querySelectorAll(".tab-btn")
+.forEach(btn => btn.classList.remove("active"));
+
+document.getElementById(tabId)
+.classList.add("active");
+
+event.target.classList.add("active");
+
+}
+
+
+/* CRIAR ITEM */
+
+function createExerciseElement(category,data){
+
+const list =
+document.getElementById(`list-${category}`);
+
+const li =
+document.createElement("li");
+
+const span =
+document.createElement("span");
+
+span.className="exercise";
+
+span.textContent=data.nome;
+
+span.dataset.name=data.nome;
+span.dataset.description=data.descricao || "";
+span.dataset.video=data.video || "";
+
+span.onclick=function(){
+openExercise(this);
+}
+
+li.appendChild(span);
+
+list.appendChild(li);
+
+}
+
+/* ADICIONAR EXERCÍCIO */
+
+function addExercise(category){
+
+    const input =
+        document.getElementById(`input-${category}`);
+
+    let name =
+        input.value.trim();
+
+    if(!name) return;
+
+    name = name
+        .toLowerCase()
+        .split(" ")
+        .map(palavra =>
+            palavra.charAt(0).toUpperCase() +
+            palavra.slice(1)
+        )
+        .join(" ");
+
+    const existe = [...document.querySelectorAll(".exercise")]
+        .some(ex =>
+            ex.dataset.name.toLowerCase() ===
+            name.toLowerCase()
+        );
+
+    if(existe){
+
+        alert("Este exercício já existe.");
+        return;
+
+    }
+
+    createExerciseElement(
+        category,
+        {
+            nome:name,
+            descricao:"",
+            video:""
+        }
+    );
+
+    salvarLocalStorage();
+
+    input.value="";
+}
+
+/* MODAL */
+
+function openExercise(element){
+
+currentExercise = element;
+
+document.getElementById("exerciseName")
+.textContent = element.dataset.name;
+
+document.getElementById("exerciseDescription")
+.value = element.dataset.description || "";
+
+document.getElementById("exerciseVideo")
+.value = element.dataset.video || "";
+
+document.getElementById("exerciseModal")
+.style.display = "block";
+
+window.onclick = function(event){
+
+    const modal =
+        document.getElementById("exerciseModal");
+
+    if(event.target === modal){
+
+        closeModal();
+
+    }
+
+}
+
+}
+
+function closeModal(){
+
+document.getElementById("exerciseModal")
+.style.display = "none";
+
+}
+
+/* SALVAR EXERCÍCIO */
+
+function saveExercise(){
+
+currentExercise.dataset.description =
+document.getElementById("exerciseDescription").value;
+
+currentExercise.dataset.video =
+document.getElementById("exerciseVideo").value;
+
+salvarLocalStorage();
+
+alert("Exercício salvo com sucesso!");
+
+}
+
+/* VÍDEO */
+
+function watchVideo(){
+
+const url =
+document.getElementById("exerciseVideo").value;
+
+if(url){
+
+window.open(url,"_blank");
+
+}else{
+
+alert("Nenhum vídeo cadastrado.");
+
+}
+
+}
+
+/* EXCLUIR */
+
+function deleteExercise(){
+
+if(confirm("Deseja excluir este exercício?")){
+
+currentExercise.parentElement.remove();
+
+salvarLocalStorage();
+
+closeModal();
+
+}
+
+}
+
+/* SALVAR */
+
+async function salvarLocalStorage(){
+
+    const dados = {};
+
+    document
+    .querySelectorAll(".tab-content")
+    .forEach(tab => {
+
+        const categoria = tab.id;
+
+        dados[categoria] = [];
+
+        tab
+        .querySelectorAll(".exercise")
+        .forEach(ex => {
+
+            dados[categoria].push({
+
+                nome: ex.dataset.name,
+                descricao: ex.dataset.description,
+                video: ex.dataset.video
+
+            });
+
+        });
+
+    });
+
+    await setDoc(
+        doc(
+            db,
+            "academia",
+            "exercicios"
+        ),
+        dados
+    );
+
+}
+
+/* CARREGAR */
+
+async function carregarLocalStorage(){
+
+    const documento =
+        await getDoc(
+            doc(
+                db,
+                "academia",
+                "exercicios"
+            )
+        );
+
+    if(!documento.exists()){
+
+        return;
+
+    }
+
+    const dados =
+        documento.data();
+
+    Object.keys(dados)
+    .forEach(categoria => {
+
+        dados[categoria]
+        .forEach(exercicio => {
+
+            createExerciseElement(
+                categoria,
+                exercicio
+            );
+
+        });
+
+    });
+
+}
+
+/* INICIALIZA */
+
+
+
+function searchExercises() {
+
+    const search =
+        document.getElementById("searchExercise")
+        .value
+        .toLowerCase();
+
+    document
+    .querySelectorAll(".exercise")
+    .forEach(exercise => {
+
+        const nome =
+            (exercise.dataset.name || "")
+            .toLowerCase();
+
+        const descricao =
+            (exercise.dataset.description || "")
+            .toLowerCase();
+
+        const encontrou =
+            nome.includes(search) ||
+            descricao.includes(search);
+
+        exercise.parentElement.style.display =
+            encontrou ? "" : "none";
+
+    });
+
+}
+
+
+/* IMPORTAR */
+
+async function importarDados(input){
+
+    const arquivo =
+        input.files[0];
+
+    if(!arquivo){
+
+        alert(
+            "Selecione um arquivo."
+        );
+
+        return;
+
+    }
+
+    const reader =
+        new FileReader();
+
+    reader.onload =
+    async function(e){
+
+        try{
+
+            const dados =
+                JSON.parse(
+                    e.target.result
+                );
+
+            await setDoc(
+                doc(
+                    db,
+                    "academia",
+                    "exercicios"
+                ),
+                dados
+            );
+
+            alert(
+                "Backup importado com sucesso!"
+            );
+
+            location.reload();
+
+        }catch(error){
+
+            alert(
+                "Arquivo inválido."
+            );
+
+        }
+
+    };
+
+    reader.readAsText(
+        arquivo
+    );
+
+}
+
+
+/* EXPORTAR */
+
+async function exportarDados(){
+
+    const documento =
+        await getDoc(
+            doc(
+                db,
+                "academia",
+                "exercicios"
+            )
+        );
+
+    if(!documento.exists()){
+
+        alert(
+            "Nenhum exercício cadastrado."
+        );
+
+        return;
+
+    }
+
+    const dados =
+        JSON.stringify(
+            documento.data(),
+            null,
+            2
+        );
+
+    const blob =
+        new Blob(
+            [dados],
+            {
+                type:"application/json"
+            }
+        );
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+    const a =
+        document.createElement("a");
+
+    a.href =
+        url;
+
+    a.download =
+        "backup-exercicios.json";
+
+    a.click();
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+</script>
+
+ 
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyDvIgtchKubR_LyU4l0p7NfmLEaRuY_GVE",
+
+    authDomain:
+        "roberta-vicari-gerenciador.firebaseapp.com",
+
+    projectId:
+        "roberta-vicari-gerenciador",
+
+    storageBucket:
+        "roberta-vicari-gerenciador.firebasestorage.app",
+
+    messagingSenderId:
+        "284839270466",
+
+    appId:
+        "1:284839270466:web:ee1abef44068483081b5db"
+
+};
+
+const app =
+    initializeApp(firebaseConfig);
+
+window.db =
+    getFirestore(app);
+
+window.doc =
+    doc;
+
+window.setDoc =
+    setDoc;
+
+window.getDoc =
+    getDoc;
+
+window.addEventListener(
+    "load",
+    async () => {
+
+        while(!window.db){
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        100
+                    )
+            );
+
+        }
+
+        await carregarLocalStorage();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
