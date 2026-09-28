@@ -540,30 +540,34 @@ event.target.classList.add("active");
 
 function createExerciseElement(category,data){
 
-const list =
-document.getElementById(`list-${category}`);
+    const list =
+        document.getElementById(`list-${category}`);
 
-const li =
-document.createElement("li");
+    if(!list){
+        return;
+    }
 
-const span =
-document.createElement("span");
+    const li =
+        document.createElement("li");
 
-span.className="exercise";
+    const span =
+        document.createElement("span");
 
-span.textContent=data.nome;
+    span.className = "exercise";
 
-span.dataset.name=data.nome;
-span.dataset.description=data.descricao || "";
-span.dataset.video=data.video || "";
+    span.textContent = data.nome;
 
-span.onclick=function(){
-openExercise(this);
-}
+    span.dataset.name = data.nome;
+    span.dataset.description = data.descricao || "";
+    span.dataset.video = data.video || "";
 
-li.appendChild(span);
+    span.onclick = function(){
+        openExercise(this);
+    };
 
-list.appendChild(li);
+    li.appendChild(span);
+
+    list.appendChild(li);
 
 }
 
@@ -606,51 +610,10 @@ function addExercise(category){
     salvarLocalStorage();
 
     input.value="";
+    dados[categoria] = [];
 }
 
-document
-    .getElementById("searchExercise")
-    .addEventListener("keydown", function(event){
-
-        if(event.key === "Enter"){
-
-            searchExercises();
-
-        }
-
-    });
-
-    function ativarEnterNosInputs(){
-
-    document
-        .querySelectorAll("input[id^='input-']")
-        .forEach(input => {
-
-            input.addEventListener(
-                "keydown",
-                function(event){
-
-                    if(event.key === "Enter"){
-
-                        const categoria =
-                            this.id.replace(
-                                "input-",
-                                ""
-                            );
-
-                        addExercise(
-                            categoria
-                        );
-
-                    }
-
-                }
-            );
-
-        });
-
-}
-
+    
 /* MODAL */
 
 function openExercise(element){
@@ -785,42 +748,32 @@ async function salvarLocalStorage(){
 
 /* CARREGAR */
 
-async function carregarLocalStorage(){
-
-    const documento =
-        await getDoc(
-            doc(
-                db,
-                "academia",
-                "exercicios"
-            )
-        );
-
-    if(!documento.exists()){
-
-        return;
-
-    }
 
     const dados =
         documento.data();
 
     Object.keys(dados)
-    .forEach(categoria => {
+.forEach(categoria => {
 
-        dados[categoria]
-        .forEach(exercicio => {
+    if(
+        !document.getElementById(categoria)
+    ){
+        criarCategoriaDinamica(
+            categoria
+        );
+    }
 
-            createExerciseElement(
-                categoria,
-                exercicio
-            );
+    dados[categoria]
+    .forEach(exercicio => {
 
-        });
+        createExerciseElement(
+            categoria,
+            exercicio
+        );
 
     });
 
-}
+});
 
 /* INICIALIZA */
 
@@ -986,7 +939,7 @@ async function exportarDados(){
 }
 
 
-function addCategory() {
+async function addCategory() {
 
     const input =
         document.getElementById("newCategory");
@@ -1074,7 +1027,8 @@ nome = nome
 
     input.value = "";
 
-    salvarLocalStorage();
+await salvarLocalStorage();
+
 
 }
 
@@ -1090,7 +1044,8 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  onSnapshot
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -1146,14 +1101,180 @@ window.addEventListener(
 
         }
 
-        await carregarLocalStorage();
+        onSnapshot(
+    doc(
+        db,
+        "academia",
+        "exercicios"
+    ),
+    (documento) => {
+
+        if(!documento.exists()){
+            return;
+        }
+
+        limparListas();
+
+        const dados =
+            documento.data();
+
+        Object.keys(dados)
+        .forEach(categoria => {
+
+            dados[categoria]
+            .forEach(exercicio => {
+
+                createExerciseElement(
+                    categoria,
+                    exercicio
+                );
+
+            });
+
+        });
+
+    }
+);
 
         ativarEnterGlobal();
 
     }
 );
 
+function limparListas(){
+
+    document
+        .querySelectorAll(
+            ".tab-content"
+        )
+        .forEach(tab => {
+
+            const categoriasFixas =
+                [
+                    "peito",
+                    "costas",
+                    "pernas",
+                    "cardio"
+                ];
+
+            if(
+                !categoriasFixas.includes(
+                    tab.id
+                )
+            ){
+                tab.remove();
+            }
+
+        });
+
+    document
+        .querySelectorAll(
+            ".tabs .tab-btn"
+        )
+        .forEach(btn => {
+
+            const nome =
+                btn.textContent.trim()
+                .toLowerCase();
+
+            const fixos =
+                [
+                    "decubito",
+                    "costas",
+                    "pernas",
+                    "cardio"
+                ];
+
+            if(
+                !fixos.includes(nome)
+            ){
+                btn.remove();
+            }
+
+        });
+
+    document
+        .querySelectorAll(
+            "ul[id^='list-']"
+        )
+        .forEach(lista => {
+
+            lista.innerHTML = "";
+
+        });
+
+}
+
+function criarCategoriaDinamica(nomeCategoria){
+
+    const nome =
+        formatarTexto(nomeCategoria);
+
+    const id =
+        nome.toLowerCase()
+        .replace(/\s+/g,"-");
+
+    if(document.getElementById(id)){
+        return;
+    }
+
+    const btn =
+        document.createElement("button");
+
+    btn.className =
+        "tab-btn";
+
+    btn.textContent =
+        nome;
+
+    btn.onclick =
+        (event) =>
+        openTab(event,id);
+
+    document
+        .querySelector(".tabs")
+        .appendChild(btn);
+
+    const content =
+        document.createElement("div");
+
+    content.id =
+        id;
+
+    content.className =
+        "tab-content";
+
+    content.innerHTML = `
+        <div class="card">
+
+            <h2>${nome}</h2>
+
+            <input
+                type="text"
+                id="input-${id}"
+                placeholder="Digite o exercício"
+            >
+
+            <button
+                class="add"
+                onclick="addExercise('${id}')"
+            >
+                Adicionar
+            </button>
+
+            <ul id="list-${id}"></ul>
+
+        </div>
+    `;
+
+    document
+        .querySelector(".container")
+        .appendChild(content);
+
+}
+
 </script>
 
 </body>
 </html>
+}
