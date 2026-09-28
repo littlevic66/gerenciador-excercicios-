@@ -475,6 +475,49 @@ Excluir
 
 let currentExercise = null;
 
+function ativarEnterGlobal() {
+
+    document.addEventListener("keydown", function(event) {
+
+        if (event.key !== "Enter") return;
+
+        const input = event.target;
+
+        if (!input.matches("input")) return;
+
+        // Busca
+        if (input.id === "searchExercise") {
+
+            searchExercises();
+            return;
+
+        }
+
+        // Nova categoria
+        if (input.id === "newCategory") {
+
+            addCategory();
+            return;
+
+        }
+
+        // Exercícios
+        if (input.id.startsWith("input-")) {
+
+            const categoria =
+                input.id.replace(
+                    "input-",
+                    ""
+                );
+
+            addExercise(categoria);
+
+        }
+
+    });
+
+}
+
 /* ABAS */
 
 function openTab(event, tabId){
@@ -563,6 +606,49 @@ function addExercise(category){
     salvarLocalStorage();
 
     input.value="";
+}
+
+document
+    .getElementById("searchExercise")
+    .addEventListener("keydown", function(event){
+
+        if(event.key === "Enter"){
+
+            searchExercises();
+
+        }
+
+    });
+
+    function ativarEnterNosInputs(){
+
+    document
+        .querySelectorAll("input[id^='input-']")
+        .forEach(input => {
+
+            input.addEventListener(
+                "keydown",
+                function(event){
+
+                    if(event.key === "Enter"){
+
+                        const categoria =
+                            this.id.replace(
+                                "input-",
+                                ""
+                            );
+
+                        addExercise(
+                            categoria
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
 }
 
 /* MODAL */
@@ -1061,6 +1147,8 @@ window.addEventListener(
         }
 
         await carregarLocalStorage();
+
+        ativarEnterGlobal();
 
     }
 );
